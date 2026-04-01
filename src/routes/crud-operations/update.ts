@@ -3,4 +3,7 @@ import Controllers from "@/controllers/index";
 
 export const updateRoute = Router();
 
-updateRoute.get('/update', (req: Request, res: Response) => void Controllers.updateController(req, res));
+updateRoute.patch(
+  "/update",
+  (req: Request, res: Response) => void Controllers.updateController(req, res),
+);
