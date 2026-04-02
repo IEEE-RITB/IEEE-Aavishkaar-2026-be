@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
+import mongodb from "mongodb";
+import { registrationsCollection } from "@/storage";
 
 // Validate params
 const paramsSchema = z.object({
@@ -13,7 +15,7 @@ const mockRegistrations = [
   { eventId: "1", name: "User C" },
 ];
 
-export const getRegistrationsByEvent = async (req: Request, res: Response) => {
+export const getRegistrationsByEventId = async (req: Request, res: Response) => {
   try {
     const parsed = paramsSchema.safeParse(req.params);
 
@@ -26,14 +28,15 @@ export const getRegistrationsByEvent = async (req: Request, res: Response) => {
     const { eventId } = parsed.data;
 
     // 🔥 Filter logic (core of your task)
-    const filtered = mockRegistrations.filter(
+    const registrations = mockRegistrations.filter(
       (reg) => reg.eventId === eventId
     );
 
+    const registration = await registrationsCollection.findOne({ eventId: new mongodb.ObjectId(eventId) });
+
     return res.status(200).json({
       success: true,
-      count: filtered.length,
-      data: filtered,
+      data: registrations,
     });
 
   } catch (error) {
