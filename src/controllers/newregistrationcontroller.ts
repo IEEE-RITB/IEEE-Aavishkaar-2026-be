@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import {registrationSchema} from "../schemas/registration.schema";
 import { RegistrationModel } from "../models/Registration";
+import { sendWelcomeEmail } from "./mailer";
 export async function newregistrationcontroller(req: Request, res: Response) {
     try {
         console.log("🔥 CONTROLLER HIT");
@@ -12,6 +13,7 @@ export async function newregistrationcontroller(req: Request, res: Response) {
         
         const registration = new RegistrationModel(parsed);
         await registration.save();
+        sendWelcomeEmail(parsed);
         console.log("Registration saved:", registration);
         
         res.status(201).json({ message: "Registration created", registration });
