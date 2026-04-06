@@ -7,7 +7,7 @@ export async function alleventscontroller( req: Request, res: Response) {
     try {
         const events = await EventModel.find();
         res.json(events);
-    } catch (err: any) {
+    } catch (err) {
         res.status(500).json({ error: (err as Error).message });
     }
 }

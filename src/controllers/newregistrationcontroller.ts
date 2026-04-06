@@ -15,8 +15,8 @@ export async function newregistrationcontroller(req: Request, res: Response) {
         console.log("Registration saved:", registration);
         
         res.status(201).json({ message: "Registration created", registration });
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in newregistrationcontroller:", err);
-        res.status(400).json({ error: (err as any).issues || (err as Error).message });
+        res.status(400).json({ error: (err as Error).message });
     }
 }

@@ -6,7 +6,7 @@ const allregistrationscontroller = async (req: Request, res: Response) => {
         const registrations = await RegistrationModel.find();
         console.log("Fetched registrations:", registrations);
         res.json(registrations);
-    } catch (err: any) {
+    } catch (err) {
         res.status(500).json({ error: (err as Error).message });
     }
 }

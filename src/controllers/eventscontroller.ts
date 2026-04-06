@@ -8,7 +8,7 @@ export async function eventscontroller( req: Request, res: Response) {
         const event = new EventModel(parsed);
         await event.save();
         res.status(201).json({ message: "Event created", event });
-    } catch (err: any) {
-        res.status(400).json({ error: (err as any).issues || (err as Error).message });
+    } catch (err) {
+        res.status(400).json({ error: (err as Error).message });
     }
 }

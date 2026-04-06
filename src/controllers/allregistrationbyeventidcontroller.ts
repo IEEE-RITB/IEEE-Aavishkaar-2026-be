@@ -24,7 +24,7 @@ try {
             data: registrations,
         });
 
-    } catch (error: any) {
+    } catch (error) {
         return res.status(500).json({
             message: "Error fetching registrations",
             error: (error as Error).message,
