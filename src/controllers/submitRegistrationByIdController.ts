@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { EventModel } from "../models/Event";
 import { RegistrationModel } from "../models/Registration";
+import { sendWelcomeEmail } from "../utils/mailer";
 
+// We keep the payload schema exactly as it was, minus the eventId which is passed in URL
 const registrationPayloadSchema = z.object({
   teamName: z.string(),
   leadName: z.string(),
@@ -17,25 +19,34 @@ const registrationPayloadSchema = z.object({
         usn: z.string().optional(),
       })
     )
-    .min(1),
+    .min(0), // Can be 0 if lead represents a team of 1
 });
 
-export async function submitRegistrationBySlugController(req: Request, res: Response) {
+export async function submitRegistrationByIdController(req: Request, res: Response): Promise<void> {
   try {
     const payload = registrationPayloadSchema.parse(req.body);
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
-    // Try to find event by ID first, then by slug as fallback
-    let event;
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      event = await EventModel.findById(id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: "Invalid Event ID format" });
+      return;
     }
+
+    const event = await EventModel.findById(id);
+
     if (!event) {
-      event = await EventModel.findOne({ slug: id });
+      res.status(404).json({ error: "Event not found" });
+      return;
     }
-    
-    if (!event) {
-      return res.status(404).json({ error: "Event not found" });
+
+    // Mathematical Team Size Verification
+    const totalMembers = (payload.teamMembers ? payload.teamMembers.length : 0) + 1; // +1 for the lead
+
+    if (totalMembers < event.minTeamSize || totalMembers > event.maxTeamSize) {
+      res.status(400).json({
+        error: `INVALID_TEAM_SCALE: Event constraints mandate between ${event.minTeamSize} and ${event.maxTeamSize} members.`
+      });
+      return;
     }
 
     const existingRegistration = await RegistrationModel.findOne({
@@ -43,7 +54,8 @@ export async function submitRegistrationBySlugController(req: Request, res: Resp
       leadEmail: payload.leadEmail.toLowerCase(),
     });
     if (existingRegistration) {
-      return res.status(409).json({ error: "Duplicate registration detected for this event using the same lead email." });
+      res.status(409).json({ error: "Duplicate registration detected for this event using the same lead email." });
+      return;
     }
 
     const registration = new RegistrationModel({
@@ -59,15 +71,21 @@ export async function submitRegistrationBySlugController(req: Request, res: Resp
     await registration.save();
 
     const referenceId = `TF-${event.title.slice(0, 4).toUpperCase()}-${registration._id.toString().slice(-6).toUpperCase()}`;
-    res.status(201).json({ 
-      ok: true, 
-      referenceId, 
+
+    // Asynchronously dispatch the retro email
+    sendWelcomeEmail(registration as any);
+
+    res.status(201).json({
+      ok: true,
+      referenceId,
       registration,
+      eventSlug: event.slug, // Explicitly returned for frontend WhatsApp lookup
       message: "Registration successful! Your spot is secured."
     });
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return res.status(400).json({ error: "Invalid registration payload", details: err.issues });
+      res.status(400).json({ error: "Invalid registration payload", details: err.issues });
+      return;
     }
     res.status(500).json({ error: (err as Error).message });
   }

@@ -1,12 +1,9 @@
 import { Request, Response } from "express";
 import { SampleController } from "./sample";
-import { eventscontroller } from "./eventscontroller";
 import { alleventscontroller } from "./alleventscontroller";
-import {newregistrationcontroller} from "./newregistrationcontroller";
 import allregistrationscontroller from "./allregistrationscontroller";
 import allregistrationsbyidcontroller from "./allregistrationbyeventidcontroller";
 import { mongodbClient } from "../db";
-
 
 export class ControllerClass {
     constructor() {
@@ -19,9 +16,7 @@ export class ControllerClass {
     }
 
     sampleController = SampleController;
-    eventscontroller = eventscontroller;
     alleventscontroller = alleventscontroller;
-    newregistrationcontroller = newregistrationcontroller;
     allregistrationscontroller = allregistrationscontroller;
     allregistrationsbyidcontroller = allregistrationsbyidcontroller;
 
