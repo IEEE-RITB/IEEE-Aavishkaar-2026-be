@@ -4,7 +4,7 @@ dotenv.config();
 import app from "./app";
 import { mongodbClient } from "./db";
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 mongodbClient.init().then(() => {
     app.listen(PORT, () => {
